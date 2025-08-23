@@ -1,0 +1,38 @@
+name: Deploy WS-SERVER
+
+on:
+  push:
+    branches:
+        - "main"
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout the code
+              uses: actions/checkout@v2
+
+            - name: Docker login
+              uses: docker/login-action@v2
+              with: 
+                username: ${{ secrets.DOCKERHUB_USERNAME }}
+                password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v4
+              with:
+                context: .
+                file: ./docker/Dockerfile.ws-server
+                push: true
+                tags: heysharan/todo-app-websocket:${{ github.sha }}
+            - name: SSH into server and deploy
+              uses: appleboy/ssh-action@v1.0.0
+              with:
+                host: 54.211.65.146
+                username: ubuntu
+                key: ${{ secrets.SSH_PRIVATE_KEY_DEV }}
+                script: |
+                    sudo docker pull heysharan/todo-app-websocket:${{ github.sha }} && sudo docker stop todo-app-websocket && sudo docker rm todo-app-websocket && sudo docker run --name todo-app-websocket -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -d -p 8081:8081 heysharan/todo-app-backend:${{ github.sha }}
+
+
+
