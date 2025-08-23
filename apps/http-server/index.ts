@@ -51,7 +51,7 @@ app.post('/user', async (req, res) => {
             }
         })
         res.status(200).json({
-            message: 'User Created !'
+            message: 'User Created Successfully !'
         })
     }catch(e){
         res.status(500).json({
