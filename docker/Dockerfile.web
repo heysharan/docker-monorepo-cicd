@@ -1,17 +1,33 @@
 FROM oven/bun:latest
 
 WORKDIR /usr/src/app
-RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
 
-COPY ./package.json ./bun.lock ./turbo.json ./
+# Build-time argument
+ARG DATABASE_URL
+
+# Set it as env so it's available for later commands
+ENV DATABASE_URL=$DATABASE_URL
+
+RUN apt-get update -y && apt-get install -y openssl
+
+# Copy lock files first to leverage Docker cache
+COPY ./bun.lock ./bun.lock
+COPY ./package.json ./package.json
+COPY ./turbo.json ./turbo.json
+
+# Install dependencies
+RUN bun install
+
+# Copy the rest of the code
 COPY ./packages ./packages
 COPY ./apps/web ./apps/web
 
-RUN bun install
+# Generate Prisma client (or similar)
+RUN bun run db:generate
 
-RUN --mount=type=secret,id=database_url \
-    DATABASE_URL=$(cat /run/secrets/database_url) bun run db:generate && \
-    DATABASE_URL=$(cat /run/secrets/database_url) bun run build
+# Build with env variable available
+RUN bun run build
 
 EXPOSE 3000
+
 CMD ["bun", "start:web"]
