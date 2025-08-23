@@ -1,0 +1,53 @@
+services:
+  postgres:
+    image: postgres
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=mypassword123  
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  http-server:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.http-server
+    environment:
+      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres bunx prisma migrate dev
+    command: >
+      sh -c "bunx prisma migrate dev --schema=packages/db/prisma/schema.prisma && bun index.ts"
+    ports:
+      - 3001:3001
+    depends_on:
+      postgres:
+        condition: service_healthy
+  ws-server:
+      build:
+        context: .
+        dockerfile: docker/Dockerfile.ws-server
+      environment:
+      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres
+      ports:
+        - 8081:8081
+      depends_on:
+        postgres:
+          condition: service_healthy
+  web:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.web
+    environment:
+      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres
+    ports:
+      - 3000:3000
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:    

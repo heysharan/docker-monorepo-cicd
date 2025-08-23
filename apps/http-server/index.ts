@@ -4,7 +4,7 @@ import argon2 from 'argon2';
 
 const app = express();
 app.use(express.json());
-const PORT = 3000;
+const PORT = 3001;
 
 app.get('/user', async (req, res) => {
     const { username, password } = req.body
