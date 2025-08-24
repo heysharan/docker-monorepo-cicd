@@ -4,6 +4,10 @@ on:
   push:
     branches:
         - "main"
+    paths:
+      - "apps/http-server/**"
+      - "docker/Dockerfile.http-server"
+      - ".github/workflows/cd_http-server.yml"    
 
 jobs:
     build:
@@ -33,8 +37,4 @@ jobs:
                 username: ubuntu
                 key: ${{ secrets.SSH_PRIVATE_KEY_DEV }}
                 script: |
-                    sudo docker pull heysharan/todo-app-backend:${{ github.sha }} && sudo docker stop todo-app-backend && sudo docker rm todo-app-backend && sudo docker run --name todo-app-backend -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -d -p 3001:3001 heysharan/todo-app-backend:${{ github.sha }}  
-
-
-
-
+                    sudo docker pull heysharan/todo-app-backend:${{ github.sha }} && sudo docker stop todo-app-backend && sudo docker rm todo-app-backend && sudo docker run --name todo-app-backend -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -d -p 3001:3001 heysharan/todo-app-backend:${{ github.sha }}

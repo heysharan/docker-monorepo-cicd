@@ -3,7 +3,11 @@ name: Deploy FRONTEND
 on:
   push:
     branches:
-      - "main"
+        - "main"
+    paths:
+      - "apps/web/**"
+      - "docker/Dockerfile.web"
+      - ".github/workflows/cd_web.yml" 
 
 jobs:
   build:
