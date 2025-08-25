@@ -13,30 +13,42 @@ services:
       timeout: 5s
       retries: 5
 
+  migrate:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.http-server
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres    
+    command: >
+      sh -c "bunx prisma migrate dev --schema=packages/db/prisma/schema.prisma"
+
   http-server:
     build:
       context: .
       dockerfile: docker/Dockerfile.http-server
     environment:
-      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres bunx prisma migrate dev
-    command: >
-      sh -c "bunx prisma migrate dev --schema=packages/db/prisma/schema.prisma && bun index.ts"
+      - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres
     ports:
       - 3001:3001
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
   ws-server:
-      build:
-        context: .
-        dockerfile: docker/Dockerfile.ws-server
-      environment:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.ws-server
+    environment:
       - DATABASE_URL=postgresql://postgres:mypassword123@postgres:5432/postgres
-      ports:
-        - 8081:8081
-      depends_on:
-        postgres:
-          condition: service_healthy
+    ports:
+      - 8081:8081
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
   web:
     build:
       context: .
@@ -46,8 +58,8 @@ services:
     ports:
       - 3000:3000
     depends_on:
-      postgres:
-        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
 
 volumes:
-  pgdata:    
+  pgdata:

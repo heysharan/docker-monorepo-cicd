@@ -33,8 +33,11 @@ jobs:
       - name: SSH into server and deploy
         uses: appleboy/ssh-action@v1.0.0
         with:
-          host: 54.163.223.140
+          host: 3.87.93.110
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY_DEV }}
           script: |
-            sudo docker pull heysharan/todo-app-frontend:${{ github.sha }} && sudo docker stop todo-app-frontend && sudo docker rm todo-app-frontend && sudo docker run --name todo-app-frontend -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -d -p 3000:3000 heysharan/todo-app-frontend:${{ github.sha }}
+            docker pull heysharan/todo-app-frontend:${{ github.sha }} && 
+            docker stop todo-app-frontend && 
+            docker rm todo-app-frontend && 
+            docker run --name todo-app-frontend -e DATABASE_URL="${{ secrets.DATABASE_URL }}" -d -p 3000:3000 heysharan/todo-app-frontend:${{ github.sha }}
